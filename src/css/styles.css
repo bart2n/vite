@@ -1,0 +1,71 @@
+/* ✅ 1. @import - En üstte olmalı */
+@import './config.reui.css';
+@import './components/image-input.css';
+@import './components/apexcharts.css';
+@import './components/leaflet.css';
+@import './components/rating.css';
+@import './components/scrollable.css';
+@import './demos/demo1.css';
+
+/* ✅ 2. Tailwind direktifleri */
+/*@import "../../tailwind.config.js";*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+/* ✅ 3. Özelleştirme (layer, apply vs.) */
+@custom-variant dark (&:is(.dark *));
+@custom-variant light (&:not(.dark *));
+
+
+@layer base {
+  .border-border {
+    border-width: 2px;
+    border-color: var(--color-red-500);
+  }
+}
+
+@layer utilities {
+  .bg-white {
+    background-color: #f3f4f6; /* override */
+  }
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+}
+@theme{
+  --color-white: #f3f4f6;
+  --color-black: #000;
+  --shadow-sm:  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+  
+
+
+@layer base{
+  .text-muted-foreground {
+    color: var(--color-gray-500);
+  }
+}
+@layer base{
+  .text-foreground {
+    color: var(--color-gray-900);
+  }
+}
+@layer components{
+  .kt-image-input-empty {
+    @apply border-dashed border-gray-300;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-none;
+  }
+}
+/*@layer components {
+  *{
+    @apply bg-white bg-opacity-100 !important;
+  }
+}*/
