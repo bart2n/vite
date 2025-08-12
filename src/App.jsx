@@ -12,6 +12,8 @@ import { SettingsProvider } from './providers/settings-provider';
 import { ThemeProvider } from './providers/theme-provider';
 import { TooltipsProvider } from './providers/tooltips-provider';
 import './css/styles.css'; // adjust path if needed
+import { store } from '@/redux/store'; 
+import { Provider } from 'react-redux'; 
 
 const { BASE_URL } = import.meta.env;
 
@@ -19,6 +21,7 @@ export function App() {
   const queryClient = new QueryClient();
 
   return (
+    <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SettingsProvider>
@@ -43,5 +46,6 @@ export function App() {
         </SettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </Provider>
   );
 }

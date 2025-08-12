@@ -25,11 +25,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Icons } from '@/components/common/icons';
 import { getSigninSchema } from '../forms/signin-schema';
+import {useLoginMutation} from "@/redux/auth/authApi"
+
 
 export function SignInPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const [ login, { isLoading: isLoggingIn, error: loginErr }] = useLoginMutation();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -99,13 +101,13 @@ export function SignInPage() {
       }
 
       // Sign in using the auth context
-      await login(values.email, values.password);
+      await login({email: values.email,password: values.password}).unwrap();
 
       // Get the 'next' parameter from URL if it exists
-      const nextPath = searchParams.get('next') || '/';
+    
 
       // Use navigate for navigation
-      navigate(nextPath);
+      window.location.assign("http://localhost:5174/");
     } catch (err) {
       console.error('Unexpected sign-in error:', err);
       setError(
