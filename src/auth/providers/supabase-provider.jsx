@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { SupabaseAdapter } from '@/auth/adapters/supabase-adapter';
 import { AuthContext } from '@/auth/context/auth-context';
 import * as authHelper from '@/auth/lib/helpers';
+import { useGetUserInstitutionsQuery } from '@/redux/Auth/authApi'; // ✅ from eklendi
+import Cookies from 'js-cookie';
 
 // Define the Supabase Auth Provider
 export function AuthProvider({ children }) {
@@ -10,27 +12,55 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // ✅ RTK Query: query hook obje döndürür
+  // token yoksa çağrıyı atlaması için skip ekledim (auth varsa dene)
+  const access = Cookies.get("access_token");
+  const refresh = localStorage.getItem("refresh_token");
+  const {
+    data: userData,
+    isLoading: userLoading,
+    isError: userError,
+    refetch,
+  } = useGetUserInstitutionsQuery(access);
+
   // Check if user is admin
   useEffect(() => {
     setIsAdmin(currentUser?.is_admin === true);
   }, [currentUser]);
 
-  const verify = async () => {
+  // ✅ userData geldikçe context'teki user'ı güncelle
+  useEffect(() => {
+    if (userData) setCurrentUser(userData);
+  }, [userData]);
+
+  // ✅ loading'i query durumu ile senkronla (ilk yüklemede spinner vs.)
+  useEffect(() => {
+    if (!userLoading) setLoading(false);
+  }, [userLoading]);
+
+  const verify = useCallback(async () => {
     if (auth) {
       try {
-        const user = await getUser();
-        setCurrentUser(user || undefined);
+        // ✅ fetch(user) yanlıştı; refetch ile veriyi tazele
+        const res = await refetch();
+        // RTK Query v1: res.data varsa kullanıcıyı yaz
+        if ('data' in res && res.data) {
+          setCurrentUser(res.data || undefined);
+        } else if (userError) {
+          saveAuth(undefined);
+          setCurrentUser(undefined);
+        }
       } catch {
         saveAuth(undefined);
         setCurrentUser(undefined);
       }
     }
-  };
+  }, [auth, refetch, userError]);
 
-  const saveAuth = (auth) => {
-    setAuth(auth);
-    if (auth) {
-      authHelper.setAuth(auth);
+  const saveAuth = (authVal) => {
+    setAuth(authVal);
+    if (authVal) {
+      authHelper.setAuth(authVal);
     } else {
       authHelper.removeAuth();
     }

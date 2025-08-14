@@ -33,11 +33,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
+import { useGetUserInstitutionsQuery } from '../../redux/Auth/authApi';
+import Cookies from "js-cookie";
 
 export function UserDropdownMenu({ trigger }) {
+  const access_token = Cookies.get("access_token");
   const { logout, user } = useAuth();
   const { currenLanguage, changeLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const {
+  data: institutions = [],
+  isLoading: instLoading,
+  refetch,
+  } = useGetUserInstitutionsQuery()
+  const inst = Array.isArray(institutions) ? institutions[0] : undefined;
 
   // Use display data from currentUser
   const displayName =
@@ -45,6 +54,8 @@ export function UserDropdownMenu({ trigger }) {
     (user?.first_name && user?.last_name
       ? `${user.first_name} ${user.last_name}`
       : user?.username || 'User');
+
+
 
   const displayEmail = user?.email || '';
   // const displayAvatar = user?.pic || toAbsoluteUrl('/media/avatars/300-2.png');
@@ -76,7 +87,7 @@ export function UserDropdownMenu({ trigger }) {
                 to="/account/home/get-started"
                 className="text-sm text-mono hover:text-primary font-semibold"
               >
-                {displayName}
+                {inst?.username ?? user?.username ?? '—'}
               </Link>
               <a
                 href={`mailto:${displayEmail}`}

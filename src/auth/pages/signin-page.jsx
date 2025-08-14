@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Icons } from '@/components/common/icons';
 import { getSigninSchema } from '../forms/signin-schema';
 import {useLoginMutation} from "@/redux/auth/authApi"
-
+import Cookies from "js-cookie";
 
 export function SignInPage() {
   const [searchParams] = useSearchParams();
@@ -37,6 +37,7 @@ export function SignInPage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const {saveAuth,verify} = useAuth();
 
   // Check for success message from password reset or error messages
   useEffect(() => {
@@ -100,14 +101,21 @@ export function SignInPage() {
         return;
       }
 
-      // Sign in using the auth context
-      await login({email: values.email,password: values.password}).unwrap();
+      const result = await login({ email: values.email, password: values.password }).unwrap();
+
+      Cookies.set("access_token", result.access, { path: "/" });
+      Cookies.set("refresh_token", result.refresh, { path: "/" });
+     // RTK login sonucu: { access, refresh } bekliyoruz
+     saveAuth({ access_token: result.access, refresh_token: result.refresh });
+     // (opsiyonel ama iyi olur) sunucudan user'ı tazele
+     await verify();
 
       // Get the 'next' parameter from URL if it exists
     
-
+      console.log('saved token?', localStorage.getItem('access_token') || sessionStorage.getItem('access_token'));
+      
       // Use navigate for navigation
-      window.location.assign("http://localhost:5174/");
+      navigate('/', { replace: true });
     } catch (err) {
       console.error('Unexpected sign-in error:', err);
       setError(
