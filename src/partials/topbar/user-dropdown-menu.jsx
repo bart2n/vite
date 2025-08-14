@@ -35,10 +35,10 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useGetUserInstitutionsQuery } from '../../redux/Auth/authApi';
 import Cookies from "js-cookie";
+import { useNavigate } from 'react-router';
 
 export function UserDropdownMenu({ trigger }) {
   const access_token = Cookies.get("access_token");
-  const { logout, user } = useAuth();
   const { currenLanguage, changeLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const {
@@ -47,17 +47,19 @@ export function UserDropdownMenu({ trigger }) {
   refetch,
   } = useGetUserInstitutionsQuery()
   const inst = Array.isArray(institutions) ? institutions[0] : undefined;
+  const navigate = useNavigate();
 
   // Use display data from currentUser
-  const displayName =
-    user?.fullname ||
-    (user?.first_name && user?.last_name
-      ? `${user.first_name} ${user.last_name}`
-      : user?.username || 'User');
+  const logout = () => {
+  // cookie'leri nasıl set ettiysen aynı path ile sil
+  Cookies.remove("access_token", { path: "/" });
+  Cookies.remove("refresh_token", { path: "/" });
+  navigate("/auth/signin?next=%2F", { replace: true });
+   };
 
 
 
-  const displayEmail = user?.email || '';
+  const displayEmail = inst?.email || '';
   // const displayAvatar = user?.pic || toAbsoluteUrl('/media/avatars/300-2.png');
   const displayAvatar = toAbsoluteUrl('/media/avatars/300-2.png');
 
@@ -87,7 +89,7 @@ export function UserDropdownMenu({ trigger }) {
                 to="/account/home/get-started"
                 className="text-sm text-mono hover:text-primary font-semibold"
               >
-                {inst?.username ?? user?.username ?? '—'}
+                {inst?.username}
               </Link>
               <a
                 href={`mailto:${displayEmail}`}
