@@ -48,6 +48,9 @@ export function UserDropdownMenu({ trigger }) {
   } = useGetUserInstitutionsQuery()
   const inst = Array.isArray(institutions) ? institutions[0] : undefined;
   const navigate = useNavigate();
+  const avatarUrl = inst?.avatar
+    ? `http://localhost:8000${inst.avatar}`
+    : toAbsoluteUrl('/media/avatars/300-2.png');
 
   // Use display data from currentUser
   const logout = () => {
@@ -61,7 +64,7 @@ export function UserDropdownMenu({ trigger }) {
 
   const displayEmail = inst?.email || '';
   // const displayAvatar = user?.pic || toAbsoluteUrl('/media/avatars/300-2.png');
-  const displayAvatar = toAbsoluteUrl('/media/avatars/300-2.png');
+ 
 
   const handleLanguage = (lang) => {
     changeLanguage(lang);
@@ -80,7 +83,7 @@ export function UserDropdownMenu({ trigger }) {
           <div className="flex items-center gap-2">
             <img
               className="size-9 rounded-full border-2 border-green-500"
-              src={displayAvatar}
+              src={avatarUrl}
               alt="User avatar"
             />
 

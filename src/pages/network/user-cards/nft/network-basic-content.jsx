@@ -27,7 +27,7 @@ export function NetworkNFTContent() {
         badgeClass:
           'flex size-2.5 bg-green-500 rounded-full ring-2 ring-white absolute bottom-0.5 start-16 transform -translate-y-1/2',
       },
-      name: 'Jenny Klabber',
+      name: 'bartudeneme',
       email: '@jenny',
       info: '0x4aD5..F89Aa',
       statistics: [

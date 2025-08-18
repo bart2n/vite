@@ -10,7 +10,7 @@ const Network = () => {
 
   const items = [
     {
-      name: 'Jenny Klabber',
+      name: 'bartudeneme',
       info: 'Pinnacle Innovate',
       avatar: {
         className: 'size-20 relative',

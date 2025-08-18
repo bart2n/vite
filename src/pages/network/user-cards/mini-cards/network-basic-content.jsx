@@ -24,7 +24,7 @@ export function NetworkMiniCardsContent() {
         badgeClass:
           'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
       },
-      name: 'Jenny Klabber',
+      name: 'bartudeneme',
       email: 'starlight.eth',
       verify: true,
     },

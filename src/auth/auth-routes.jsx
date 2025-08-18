@@ -9,6 +9,7 @@ import { TwoFactorAuth } from './pages/extended/tfa';
 import { ResetPasswordPage } from './pages/reset-password-page';
 import { SignInPage } from './pages/signin-page';
 import { SignUpPage } from './pages/signup-page';
+import { ExternalAuth } from './pages/external-auth';
 
 // Define the auth routes
 export const authRoutes = [
@@ -49,6 +50,10 @@ export const authRoutes = [
         path: 'reset-password/changed',
         element: <ResetPasswordChanged />,
       },
+      {
+            path: 'external',
+            element: <ExternalAuth />,
+          },
     ],
   },
   {

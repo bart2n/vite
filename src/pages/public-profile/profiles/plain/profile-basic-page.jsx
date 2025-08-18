@@ -28,7 +28,7 @@ export function ProfilePlainPage() {
   return (
     <Fragment>
       <UserHero
-        name="Jenny Klabber"
+        name="bartudeneme"
         image={image}
         info={[
           { label: 'KeenThemes', icon: Luggage },

@@ -28,7 +28,7 @@ export function NetworkAuthorContent() {
           'flex size-3 bg-green-500 rounded-full ring-2 ring-white absolute bottom-2 start-[93px] in-[.authors-row]:start-[64px]',
       },
       bgImage: 'bg-7.png',
-      name: 'Jenny Klabber',
+      name: 'bartudeneme',
       location: 'Houston, Texas',
       url: '#',
       works: [

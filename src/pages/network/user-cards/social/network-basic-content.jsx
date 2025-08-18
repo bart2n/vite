@@ -26,7 +26,7 @@ export function NetworkSocialContent() {
         badgeClass:
           'flex size-2.5 bg-green-500 rounded-full ring-2 ring-white absolute bottom-0.5 start-16 transform -translate-y-1/2',
       },
-      name: 'Jenny Klabber',
+      name: 'bartudeneme',
       description: 'San Antonio, TX',
       verify: true,
     },

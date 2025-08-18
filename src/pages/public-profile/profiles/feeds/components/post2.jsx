@@ -23,7 +23,7 @@ const Post2 = () => {
   return (
     <Card>
       <Heading
-        author="Jenny Klabber"
+        author="bartudeneme"
         avatar={{ image: '300-1.png', imageClass: 'rounded-full size-[50px]' }}
         date="2 days ago"
       />

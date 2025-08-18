@@ -32,8 +32,16 @@ import { Breadcrumb } from './breadcrumb';
 import { MegaMenu } from './mega-menu';
 import { MegaMenuMobile } from './mega-menu-mobile';
 import { SidebarMenu } from './sidebar-menu';
+import { useGetUserInstitutionsQuery } from '../../../redux/Auth/authApi';
 
 export function Header() {
+   const {data:institutions,isLoading:loading} = useGetUserInstitutionsQuery();
+   const inst = Array.isArray(institutions) ? institutions[0] : undefined;
+   const avatarUrl = inst?.avatar
+     ? `http://localhost:8000${inst.avatar}`
+     : toAbsoluteUrl('/media/avatars/300-2.png');
+
+
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
   const [isMegaMenuSheetOpen, setIsMegaMenuSheetOpen] = useState(false);
 
@@ -127,20 +135,6 @@ export function Header() {
             <StoreClientTopbar />
           ) : (
             <>
-              {!mobileMode && (
-                <SearchDialog
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      mode="icon"
-                      shape="circle"
-                      className="size-9 hover:bg-primary/10 hover:[&_svg]:text-primary"
-                    >
-                      <Search className="size-4.5!" />
-                    </Button>
-                  }
-                />
-              )}
               <NotificationsSheet
                 trigger={
                   <Button
@@ -167,25 +161,15 @@ export function Header() {
                 }
               />
 
-              <AppsDropdownMenu
-                trigger={
-                  <Button
-                    variant="ghost"
-                    mode="icon"
-                    shape="circle"
-                    className="size-9 hover:bg-primary/10 hover:[&_svg]:text-primary"
-                  >
-                    <LayoutGrid className="size-4.5!" />
-                  </Button>
-                }
-              />
+              
 
               <UserDropdownMenu
                 trigger={
                   <img
                     className="size-9 rounded-full border-2 border-green-500 shrink-0 cursor-pointer"
-                    src={toAbsoluteUrl('/media/avatars/300-2.png')}
+                    src={avatarUrl}
                     alt="User Avatar"
+                    
                   />
                 }
               />

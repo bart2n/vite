@@ -28,7 +28,7 @@ export function ProfileBloggerPage() {
   return (
     <Fragment>
       <UserHero
-        name="Jenny Klabber"
+        name="bartudeneme"
         image={image}
         info={[
           { label: 'KeenThemes', icon: Dribbble },

@@ -32,7 +32,7 @@ export function ReportUserDialog({ open, onOpenChange }) {
             to="#"
             className="hover:text-primary-active text-sm leading-5 font-semibold text-mono"
           >
-            Jenny Klabber
+            bartudeneme
           </Link>
 
           <svg

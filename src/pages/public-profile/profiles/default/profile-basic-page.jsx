@@ -15,11 +15,14 @@ import { toAbsoluteUrl } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/common/container';
 import { ProfileDefaultContent } from '.';
+import { useGetUserInstitutionsQuery } from '../../../../redux/Auth/authApi';
 
 export function ProfileDefaultPage() {
+  const {data:institutions,isLoading:loading} = useGetUserInstitutionsQuery();
+  const inst = Array.isArray(institutions) ? institutions[0] : undefined;
   const image = (
     <img
-      src={toAbsoluteUrl('/media/avatars/300-1.png')}
+      src={toAbsoluteUrl(`http://localhost:8000${inst.avatar}`)}
       className="rounded-full border-3 border-green-500 size-[100px] shrink-0"
       alt="image"
     />
@@ -28,12 +31,10 @@ export function ProfileDefaultPage() {
   return (
     <Fragment>
       <UserHero
-        name="Jenny Klabber"
+        name={inst.username}
         image={image}
         info={[
-          { label: 'KeenThemes', icon: Luggage },
-          { label: 'SF, Bay Area', icon: MapPin },
-          { email: 'jenny@kteam.com', icon: Mail },
+          
         ]}
       />
 

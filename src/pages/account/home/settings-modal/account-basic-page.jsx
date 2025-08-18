@@ -14,8 +14,10 @@ import { toAbsoluteUrl } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/common/container';
 import { AccountSettingsModal } from '.';
+import { useGetUserInstitutionsQuery } from '../../../../redux/Auth/authApi';
 
 export function AccountSettingsModalPage() {
+  const {data:institutions,isLoading:loading} = useGetUserInstitutionsQuery();
   const [settingsModalOpen, setSettingsModalOpen] = useState(true);
   const handleSettingsModalClose = () => {
     setSettingsModalOpen(false);
@@ -28,11 +30,12 @@ export function AccountSettingsModalPage() {
       alt="image"
     />
   );
+  const inst = Array.isArray(institutions) ? institutions[0] : undefined;
 
   return (
     <Fragment>
       <UserHero
-        name="Jenny Klabber"
+        name={inst.username}
         image={image}
         info={[
           { label: 'KeenThemes', icon: Luggage },
