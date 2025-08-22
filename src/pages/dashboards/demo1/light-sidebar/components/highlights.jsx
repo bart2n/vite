@@ -10,9 +10,16 @@ import { ArrowDown, ArrowUp, EllipsisVertical } from 'lucide-react';
 import { Badge, BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+//import { useGetUserInstitutionsQuery } from '../../../../../redux/Auth/authApi';
+import { useDashboardStatsQuery } from '../../../../../redux/Dashboard/dashboardApi';
+import Cookies from "js-cookie";
 
 
 const Highlights = ({ limit }) => {
+  //const {data:InstitutionData,isLoading:loading} = useGetUserInstitutionsQuery();
+  //const inst = Array.isArray(InstitutionData)  ? InstitutionData[0] : undefined;
+  const id = Cookies.get("user_id");
+  const {data:statsData,isLoading:loading} = useDashboardStatsQuery({id});
   const rows = [
     {
       icon: RiStore2Line,
@@ -105,7 +112,7 @@ const Highlights = ({ limit }) => {
             All time sales
           </span>
           <div className="flex items-center gap-2.5">
-            <span className="text-3xl font-semibold text-mono">$295.7k</span>
+            <span className="text-3xl font-semibold text-mono">${statsData?.monthlyEarnings ?? 0}</span>
             <Badge size="sm" variant="success" appearance="light">
               +2.7%
             </Badge>

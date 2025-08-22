@@ -109,15 +109,6 @@ export function UserDropdownMenu({ trigger }) {
         {/* Menu Items */}
         <DropdownMenuItem asChild>
           <Link
-            to="/public-profile/profiles/default"
-            className="flex items-center gap-2"
-          >
-            <IdCard />
-            Public Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
             to="/account/home/user-profile"
             className="flex items-center gap-2"
           >
@@ -133,15 +124,6 @@ export function UserDropdownMenu({ trigger }) {
             My Account
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
-            <DropdownMenuItem asChild>
-              <Link
-                to="/account/home/get-started"
-                className="flex items-center gap-2"
-              >
-                <Coffee />
-                Get Started
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
                 to="/account/home/user-profile"
@@ -190,35 +172,8 @@ export function UserDropdownMenu({ trigger }) {
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
-        <DropdownMenuItem asChild>
-          <Link
-            to="https://devs.keenthemes.com"
-            className="flex items-center gap-2"
-          >
-            <SquareCode />
-            Dev Forum
-          </Link>
-        </DropdownMenuItem>
-
         {/* Language Submenu with Radio Group */}
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="flex items-center gap-2 [&_[data-slot=dropdown-menu-sub-trigger-indicator]]:hidden hover:[&_[data-slot=badge]]:border-input data-[state=open]:[&_[data-slot=badge]]:border-input">
-            <Globe />
-            <span className="flex items-center justify-between gap-2 grow relative">
-              Language
-              <Badge
-                variant="outline"
-                className="absolute end-0 top-1/2 -translate-y-1/2"
-              >
-                {currenLanguage.label}
-                <img
-                  src={currenLanguage.flag}
-                  className="w-3.5 h-3.5 rounded-full"
-                  alt={currenLanguage.label}
-                />
-              </Badge>
-            </span>
-          </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">
             <DropdownMenuRadioGroup
               value={currenLanguage.code}
@@ -251,20 +206,6 @@ export function UserDropdownMenu({ trigger }) {
         <DropdownMenuSeparator />
 
         {/* Footer */}
-        <DropdownMenuItem
-          className="flex items-center gap-2"
-          onSelect={(event) => event.preventDefault()}
-        >
-          <Moon />
-          <div className="flex items-center gap-2 justify-between grow">
-            Dark Mode
-            <Switch
-              size="sm"
-              checked={theme === 'dark'}
-              onCheckedChange={handleThemeToggle}
-            />
-          </div>
-        </DropdownMenuItem>
         <div className="p-2 mt-1">
           <Button
             variant="outline"
