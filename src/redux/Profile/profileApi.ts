@@ -19,8 +19,20 @@ const authApi = baseApi.injectEndpoints({
       },
       providesTags: [],
     }),
+    getInstitutionDetail: build.query({
+        query: (institutionId) => {
+          return {
+            url: `user/get-institution-detail/`,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            params: { id: institutionId },
+          };
+        },
+        providesTags: [],
+      }),
   }),
   overrideExisting: false,
 });
 
-export const {  useGetInstitutionTimelineQuery  } = authApi;
+export const {  useGetInstitutionTimelineQuery,useGetInstitutionDetailQuery  } = authApi;

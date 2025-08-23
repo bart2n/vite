@@ -14,7 +14,7 @@ const AvatarSingle = ({
     <div className={cn(className && className)}>
       {image && (
         <img
-          src={toAbsoluteUrl(`/media/avatars/${image}`)}
+          src={toAbsoluteUrl(`${image}`)}
           className={cn(imageClass && imageClass)}
           alt="image"
         />

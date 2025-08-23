@@ -1,289 +1,82 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { CardConnection, CardConnectionRow } from '@/partials/cards';
 import { LayoutGrid, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useGetInstitutionDetailQuery } from '../../../../redux/Profile/profileApi';
+import Cookies from 'js-cookie';
+
+const IMG_BASE = 'http://localhost:8000';
 
 const Network = () => {
   const [activeView, setActiveView] = useState('cards');
+  const id = Cookies.get('user_id');
+  const { data: detail, isLoading } = useGetInstitutionDetailQuery(id);
 
-  const items = [
-    {
-      name: 'bartudeneme',
-      info: 'Pinnacle Innovate',
-      avatar: {
-        className: 'size-20 relative',
-        image: '300-1.png',
-        imageClass: 'rounded-full',
-        badgeClass:
-          'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'kevin@pinnacle.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-4.png' },
-          { filename: '300-1.png' },
-          { filename: '300-2.png' },
-        ],
+  // Güvenli default
+  const followers = useMemo(() => detail?.followers ?? [], [detail]);
+  const followings = useMemo(() => detail?.followings ?? [], [detail]);
 
-        more: {
-          number: 10,
-          variant: 'text-white ring-background bg-green-500 size-7',
-        },
-      },
-      statistics: [
-        {
-          total: '92',
-          description: 'Purchases',
-        },
-        {
-          total: '$69',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$6,240',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: true,
-    },
-    {
-      name: 'Sarah Johnson',
-      info: 'InnovateX',
-      avatar: {
-        className:
-          'flex items-center justify-center relative text-2xl text-info size-20 ring-1 ring-violet-200 bg-violet-50 rounded-full',
-        fallback: 'S',
-        badgeClass:
-          'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'sarahj@innx.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-5.png' },
-          { filename: '300-6.png' },
-          { filename: '300-7.png' },
-          { filename: '300-11.png' },
-        ],
-      },
-      statistics: [
-        {
-          total: '123',
-          description: 'Purchases',
-        },
-        {
-          total: '$30',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$3,713',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: false,
-    },
-    {
-      name: 'Kevin Wang',
-      info: 'Pinnacle Innovate',
-      avatar: {
-        className:
-          'flex items-center justify-center relative text-2xl text-destructive size-20 ring-1 ring-red-200 bg-red-50 rounded-full',
-        fallback: 'K',
-        badgeClass:
-          'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'kevin@pinnacle.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-29.png' },
-          { filename: '300-33.png' },
-          { filename: '300-23.png' },
-          { filename: '300-31.png' },
-        ],
-      },
-      statistics: [
-        {
-          total: '30',
-          description: 'Purchases',
-        },
-        {
-          total: '$150',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$4,500',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: true,
-    },
-    {
-      name: 'Brian Davis',
-      info: 'Vortex Tech',
-      avatar: {
-        className: 'size-20 relative',
-        image: '300-9.png',
-        imageClass: 'rounded-full',
-        badgeClass:
-          'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'brian@vortextech.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-14.png' },
-          { filename: '300-3.png' },
-          { filename: '300-19.png' },
-          { filename: '300-15.png' },
-        ],
-      },
-      statistics: [
-        {
-          total: '87',
-          description: 'Purchases',
-        },
-        {
-          total: '$22',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$1958',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: true,
-    },
-    {
-      name: 'Megan Taylor',
-      info: 'Catalyst',
-      avatar: {
-        className:
-          'flex items-center justify-center relative text-2xl text-green-500 size-20 ring-1 ring-green-200 bg-green-50 rounded-full',
-        fallback: 'M',
-        badgeClass:
-          'flex size-2.5 bg-accent rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'megan@catalyst.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-5.png' },
-          { filename: '300-26.png' },
-          { filename: '300-6.png' },
-          { filename: '300-1.png' },
-        ],
-      },
-      statistics: [
-        {
-          total: '45',
-          description: 'Purchases',
-        },
-        {
-          total: '$300',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$13,500',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: false,
-    },
-    {
-      name: 'Alex Martinez',
-      info: 'Precision Solutions',
-      avatar: {
-        className: 'size-20 relative',
-        image: '300-8.png',
-        imageClass: 'rounded-full',
-        badgeClass:
-          'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
-      },
-      email: 'alex@kteam.com',
-      team: {
-        size: 'size-7',
-        group: [
-          { filename: '300-4.png' },
-          { filename: '300-5.png' },
-          { filename: '300-11.png' },
-        ],
-
-        more: {
-          number: 10,
-          variant: 'text-white ring-background bg-green-500 size-7',
-        },
-      },
-      statistics: [
-        {
-          total: '63',
-          description: 'Purchases',
-        },
-        {
-          total: '$65',
-          description: 'Avg. Price',
-        },
-        {
-          total: '$4,095',
-          description: 'Total spent',
-        },
-      ],
-
-      connected: true,
-    },
-  ];
-
-  const renderItem = (item, index) => {
-    return (
-      <CardConnection
-        name={item.name}
-        info={item.info}
-        avatar={item.avatar}
-        email={item.email}
-        team={item.team}
-        statistics={item.statistics}
-        connected={item.connected}
-        key={index}
-      />
-    );
+  // API kullanıcı nesnesini CardConnection’ın beklediği yapıya çevir
+  const toCardItem = (u, connectedDefault = false) => {
+    console.log("u:",u);
+    const hasAvatar = !!u?.avatar;
+    console.log("hasAvatar", hasAvatar);
+    console.log("u.avatar?.startsWith('http')", u.avatar?.startsWith('http'));
+    const avatar = hasAvatar
+      ? {
+          className: 'size-20 relative',
+          image: u.avatar?.startsWith('http')
+            ? u.avatar
+            : `http://localhost:8000${u.avatar}`, // Eğer zaten tam URL değilse, prepend et
+          imageClass: 'rounded-full',
+          badgeClass:
+            'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
+        }
+      : {
+          className:
+            'flex items-center justify-center relative text-2xl text-info size-20 ring-1 ring-violet-200 bg-violet-50 rounded-full',
+          fallback: (u?.username?.[0] || '?').toUpperCase(),
+          badgeClass:
+            'flex size-2.5 bg-green-500 rounded-full absolute bottom-0.5 start-16 transform -translate-y-1/2',
+        };
+  
+    return {
+      name: u?.username || '—',
+      info: u?.city || '',
+      avatar,
+      email: u?.email || '',
+      team: { size: 'size-7', group: [] },
+      statistics: [],
+      connected: connectedDefault,
+    };
   };
+  const followerItems = followers.map((u) => toCardItem(u, false));
+  const followingItems = followings.map((u) => toCardItem(u, true));
 
-  const renderData = (data, index) => {
-    return (
-      <CardConnectionRow
-        name={data.name}
-        info={data.info}
-        avatar={data.avatar}
-        email={data.email}
-        team={data.team}
-        statistics={data.statistics}
-        connected={data.connected}
-        key={index}
-      />
-    );
-  };
+  console.log("followeItems", followerItems);
+
+  const renderCard = (item, i) => (
+    <CardConnection key={i} {...item} />
+  );
+
+  const renderRow = (item, i) => (
+    <CardConnectionRow key={i} {...item} />
+  );
 
   return (
     <div className="flex flex-col items-stretch gap-5 lg:gap-7.5">
+      {/* Üst bar (toplam bağlantı: followers + followings) */}
       <div className="flex flex-wrap items-center gap-5 justify-between">
         <h3 className="text-lg text-mono font-semibold">
-          {items.length} Connections
+          {isLoading ? 'Loading…' : `${followerItems.length + followingItems.length} Connections`}
         </h3>
         <ToggleGroup
           type="single"
           variant="outline"
           value={activeView}
-          onValueChange={(value) => {
-            if (value) setActiveView(value);
-          }}
+          onValueChange={(v) => v && setActiveView(v)}
         >
           <ToggleGroupItem value="cards">
             <LayoutGrid size={16} />
@@ -293,34 +86,76 @@ const Network = () => {
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      {activeView === 'cards' && (
-        <div id="network_cards">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-7.5">
-            {items.map((item, index) => {
-              return renderItem(item, index);
-            })}
+
+      {/* Followers */}
+      <div className="flex flex-col gap-3">
+        <h4 className="text-base font-semibold">
+          {isLoading ? 'Followers' : `Followers (${followerItems.length})`}
+        </h4>
+
+        {activeView === 'cards' ? (
+          <div id="followers_cards">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-7.5">
+              {(isLoading ? [] : followerItems).map(renderCard)}
+            </div>
+            {!isLoading && (
+              <div className="flex grow justify-center pt-5 lg:pt-7.5">
+                <Button mode="link" underlined="dashed" asChild>
+                  <Link to="/account/members/team-info">Show more Connections</Link>
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="flex grow justify-center pt-5 lg:pt-7.5">
-            <Button mode="link" underlined="dashed" asChild>
-              <Link to="/account/members/team-info">Show more Connections</Link>
-            </Button>
+        ) : (
+          <div id="followers_list">
+            <div className="flex flex-col gap-5 lg:gap-7.5">
+              {(isLoading ? [] : followerItems).map(renderRow)}
+            </div>
+            {!isLoading && (
+              <div className="flex grow justify-center pt-5 lg:pt-7.5">
+                <Button mode="link" underlined="dashed" asChild>
+                  <Link to="/account/members/team-info">Show more Connections</Link>
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-      {activeView === 'list' && (
-        <div id="network_list">
-          <div className="flex flex-col gap-5 lg:gap-7.5">
-            {items.map((data, index) => {
-              return renderData(data, index);
-            })}
+        )}
+      </div>
+
+      {/* Following */}
+      <div className="flex flex-col gap-3">
+        <h4 className="text-base font-semibold">
+          {isLoading ? 'Following' : `Following (${followingItems.length})`}
+        </h4>
+
+        {activeView === 'cards' ? (
+          <div id="following_cards">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-7.5">
+              {(isLoading ? [] : followingItems).map(renderCard)}
+            </div>
+            {!isLoading && (
+              <div className="flex grow justify-center pt-5 lg:pt-7.5">
+                <Button mode="link" underlined="dashed" asChild>
+                  <Link to="/account/members/team-info">Show more Connections</Link>
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="flex grow justify-center pt-5 lg:pt-7.5">
-            <Button mode="link" underlined="dashed" asChild>
-              <Link to="/account/members/team-info">Show more Connections</Link>
-            </Button>
+        ) : (
+          <div id="following_list">
+            <div className="flex flex-col gap-5 lg:gap-7.5">
+              {(isLoading ? [] : followingItems).map(renderRow)}
+            </div>
+            {!isLoading && (
+              <div className="flex grow justify-center pt-5 lg:pt-7.5">
+                <Button mode="link" underlined="dashed" asChild>
+                  <Link to="/account/members/team-info">Show more Connections</Link>
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
