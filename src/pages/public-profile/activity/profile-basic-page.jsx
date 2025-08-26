@@ -18,15 +18,16 @@ import { ProfileActivityContent } from '.';
 import { useGetUserInstitutionsQuery } from '../../../redux/Auth/authApi';
 
 export function ProfileActivityPage() {
-  const {data:institutions,isLoading:loading} = useGetUserInstitutionsQuery();
+  const {data:InstitutionData,isLoading:loading} = useGetUserInstitutionsQuery();
+  const inst = Array.isArray(InstitutionData) ? InstitutionData[0] : undefined;
+
   const image = (
     <img
-      src={toAbsoluteUrl('/media/avatars/300-1.png')}
+      src={toAbsoluteUrl(`http://localhost:8000${inst.avatar}`)}
       className="rounded-full border-3 border-green-500 size-[100px] shrink-0"
       alt="image"
     />
   );
-  const inst = Array.isArray(institutions) ? institutions[0] : undefined;
 
   return (
     <Fragment>
@@ -34,9 +35,6 @@ export function ProfileActivityPage() {
         name={inst.username}
         image={image}
         info={[
-          { label: 'KeenThemes', icon: Zap },
-          { label: 'SF, Bay Area', icon: MapPin },
-          { email: 'jenny@kteam.com', icon: Mail },
         ]}
       />
 
