@@ -86,10 +86,6 @@ export const MENU_SIDEBAR = [
         title: 'Account',
         children: [
           { title: 'User Profile', path: '/account/home/user-profile' },
-          {
-            title: 'Settings - With Sidebar',
-            path: '/account/home/settings-sidebar',
-          },
         ],
       },
       {
