@@ -1,321 +1,397 @@
-import { useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
-  Calendar,
-  CheckCheck,
-  MoreVertical,
-  Settings2,
-  Shield,
-  Upload,
-  Users,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { toAbsoluteUrl } from '@/lib/helpers';
-import { cn } from '@/lib/utils';
-import {
+  IconButton,
   Avatar,
-  AvatarFallback,
-  AvatarImage,
-  AvatarIndicator,
-  AvatarStatus,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { AvatarGroup } from '../common/avatar-group';
+  Badge,
+  List,
+  ListItem,
+  ListItemText,
+  Button,
+  CircularProgress,
+  Snackbar,
+} from "@mui/material";
+import { Chat, Close, Send } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { setOpen, setRoomId, resetRoom } from "@/redux/roomreducer";
+import { useGetRoomQuery, usePostCreateRoomMutation } from "@/redux/chat/chatApi";
+import cookies from "js-cookie";
 
-export function ChatSheet({ trigger }) {
-  const [emailInput, setEmailInput] = useState('');
+export const ChatSheet = () => {
+  const dispatch = useDispatch();
+  const isOpen = useSelector((state) => state?.room?.isOpen);
+  const activeRoom = useSelector((state) => state?.room?.roomId);
 
-  const messages = [
-    {
-      avatar: '/media/avatars/300-5.png',
-      time: '14:04',
-      text: 'Hello! <br> Next week we are closing the project. Do You have questions?',
-      in: true,
-    },
-    {
-      avatar: '/media/avatars/300-2.png',
-      text: 'This is excellent news!',
-      time: '14:08',
-      read: true,
-      out: true,
-    },
-    {
-      avatar: '/media/avatars/300-4.png',
-      time: '14:26',
-      text: 'I have checked the features, can not wait to demo them!',
-      in: true,
-    },
-    {
-      avatar: '/media/avatars/300-1.png',
-      time: '15:09',
-      text: 'I have looked over the rollout plan, and everything seems spot on. I am ready on my end and can not wait for the user feedback.',
-      in: true,
-    },
-    {
-      avatar: '/media/avatars/300-2.png',
-      text: "Haven't seen the build yet, I'll look now.",
-      time: '15:52',
+  // RTK query – rooms list
+  const {
+    data: rooms = [],
+    error: roomsError,
+    isLoading: roomsLoading,
+  } = useGetRoomQuery("");
+
+  // sockets per room kept in a ref (won’t trigger re-renders)
+  const socketsRef = useRef({}); // { [roomId]: WebSocket }
+
+  // messages by room: { [roomId]: Array<Message> }
+  const [messagesByRoom, setMessagesByRoom] = useState({});
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [currentUsername, setCurrentUsername] = useState("");
+  const messagesEndRef = useRef(null);
+
+  // (optional) create room hook (unused here but kept like your code)
+  const [createRoom] = usePostCreateRoomMutation();
+
+  // current user
+  const userId = useMemo(() => localStorage.getItem("user_id") || "", []);
+  useEffect(() => {
+    const stored = localStorage.getItem("username");
+    if (stored) setCurrentUsername(stored);
+  }, []);
+
+  // toggle floating panel
+  const toggleChatList = () => dispatch(setOpen(!isOpen));
+
+  // open one WS per room (and keep it)
+  useEffect(() => {
+    if (!rooms?.length) return;
+
+    rooms.forEach((room) => {
+      const id = room?.id;
+      if (!id) return;
+
+      const existing = socketsRef.current[id];
+      if (existing && existing.readyState <= 1) return; // already OPEN/CONNECTING
+
+      const ws = new WebSocket(`ws://localhost:8001/ws/chat/${id}/`);
+      socketsRef.current[id] = ws;
+
+      ws.onopen = () => {
+        // console.log("WS open:", id);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (!data?.message) return;
+
+          const msg = {
+            message: data.message,
+            sender_id: data.sender_id ?? "Bilinmeyen",
+            sender_name: data.sender_name ?? "Bilinmeyen",
+            sender_username: data.sender_username ?? "Bilinmeyen",
+            sender_status: data.sender_status ?? "Çevrimdışı",
+            timestamp: data.timestamp ?? new Date().toISOString(),
+            read: Boolean(data.read),
+          };
+
+          setMessagesByRoom((prev) => {
+            const list = prev[id] ?? [];
+            return { ...prev, [id]: [...list, msg] };
+          });
+        } catch {
+          // ignore malformed payloads
+        }
+      };
+
+      ws.onerror = () => {
+        // console.warn("WS error:", id);
+      };
+
+      ws.onclose = () => {
+        // console.log("WS closed:", id);
+      };
+    });
+
+    // cleanup on unmount: close all sockets
+    return () => {
+      Object.values(socketsRef.current).forEach((sock) => {
+        try {
+          sock.close();
+        } catch {}
+      });
+      socketsRef.current = {};
+    };
+  }, [rooms]);
+
+  // auto-scroll to bottom when active room messages change
+  useEffect(() => {
+    if (!activeRoom?.id) return;
+    // touch dependency to trigger effect
+    // eslint-disable-next-line no-unused-expressions
+    messagesByRoom[activeRoom.id];
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messagesByRoom, activeRoom]);
+
+  // select a room from the list
+  const handleRoomSelect = (room) => {
+    if (!room) return;
+    dispatch(setRoomId(room));
+  };
+
+  // close the active chat panel
+  const closeChat = () => dispatch(setRoomId(null));
+
+  // sort messages by time for a room
+  const sortedMessages = (roomId) => {
+    const list = messagesByRoom[roomId] || [];
+    return [...list].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    // if you prefer newest last, keep as is; change comparator to reverse for newest first
+  };
+
+  // send message into active room WS
+  const sendMessage = (e, roomId) => {
+    e.preventDefault();
+    const msg = currentMessage.trim();
+    if (!roomId || !msg) return;
+
+    const ws = socketsRef.current[roomId];
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const payload = {
+      message: msg,
+      sender_name: currentUsername,
+      sender_id: userId,
+      sender_status: "Çevrimiçi",
+      timestamp: new Date().toISOString(),
       read: false,
-      out: true,
-    },
-    {
-      avatar: '/media/avatars/300-2.png',
-      text: 'Checking the build now',
-      time: '15:52',
-      read: false,
-      out: true,
-    },
-    {
-      avatar: '/media/avatars/300-4.png',
-      time: '17:40',
-      text: 'Tomorrow, I will send the link for the meeting',
-      in: true,
-    },
-  ];
+    };
+
+    ws.send(JSON.stringify(payload));
+
+    // optimistic update
+    setMessagesByRoom((prev) => {
+      const list = prev[roomId] ?? [];
+      return { ...prev, [roomId]: [...list, payload] };
+    });
+
+    setCurrentMessage("");
+  };
+
+  // small helper to pick a display peer for a room (other participant)
+  const displayPeer = (room) => {
+    if (!room?.participants?.length) return {};
+    const other =
+      room.participants.find((p) => String(p?.id) !== String(userId)) ||
+      room.participants[0];
+    return {
+      username: other?.username || "Kullanıcı Adı",
+      avatar:
+        other?.avatar ? `http://localhost:8000${other.avatar}` : "/avatar.jpg",
+    };
+  };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent className="p-0 gap-0 sm:w-[450px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
-        <SheetHeader>
-          <div className="flex items-center justify-between p-3 border-b border-border">
-            <SheetTitle>Chat</SheetTitle>
-          </div>
-          <div className="border-b border-border p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-11 h-11 rounded-full bg-accent/60 border border-border flex items-center justify-center">
-                  <img
-                    src={toAbsoluteUrl('/media/brand-logos/gitlab.svg')}
-                    className="w-7 h-7"
-                    alt=""
-                  />
-                </div>
-                <div>
-                  <Link
-                    to="#"
-                    className="text-sm font-semibold text-mono hover:text-blue-600"
-                  >
-                    HR Team
-                  </Link>
-                  <span className="text-xs italic text-muted-foreground block">
-                    Jessy is typing...
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <AvatarGroup
-                  size="size-8"
-                  group={[
-                    { path: '/media/avatars/300-4.png' },
-                    { path: '/media/avatars/300-1.png' },
-                    { path: '/media/avatars/300-2.png' },
-                    {
-                      fallback: '+10',
-                      variant: 'bg-green-500 text-white',
-                    },
-                  ]}
+    <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1000 }}>
+      {/* Floating Chat Button */}
+      <div
+        style={{
+          backgroundColor: "#0073b1",
+          padding: "10px",
+          color: "#fff",
+          borderRadius: "10px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+        }}
+        onClick={toggleChatList}
+      >
+        <IconButton style={{ color: "#fff" }}>
+          {isOpen ? <Close /> : <Chat />}
+        </IconButton>
+        <span style={{ marginLeft: "10px" }}>Chat</span>
+      </div>
+
+      {/* Panel (rooms + messages) */}
+      {isOpen && (
+        <div style={{ display: "flex" }}>
+          {/* Rooms List */}
+          <div
+            style={{
+              backgroundColor: "#0073b1",
+              padding: "10px",
+              color: "#fff",
+              borderRadius: "10px",
+              width: "220px",
+              marginTop: "10px",
+              position: "relative",
+            }}
+          >
+            <span>Kullanıcı Listesi</span>
+            <div
+              style={{ overflowY: "auto", maxHeight: "400px", marginTop: "10px" }}
+            >
+              {roomsLoading && <CircularProgress size={20} sx={{ color: "#fff" }} />}
+              {roomsError && (
+                <Snackbar
+                  open
+                  autoHideDuration={6000}
+                  message={`Hata: ${roomsError?.message || "Rooms yüklenemedi"}`}
                 />
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" mode="icon" size="sm">
-                      <MoreVertical className="size-4!" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    className="w-44"
-                    side="bottom"
-                    align="end"
-                  >
-                    <DropdownMenuItem asChild>
-                      <Link to="/account/members/teams">
-                        <Users /> Invite Users
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Settings2 />
-                        <span>Team Settings</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="w-44">
-                          <DropdownMenuItem asChild>
-                            <Link to="/account/members/import-members">
-                              <Shield />
-                              Find Members
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/account/members/import-members">
-                              <Calendar /> Meetings
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/account/members/import-members">
-                              <Shield /> Group Settings
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    <DropdownMenuItem asChild>
-                      <Link to="/account/security/privacy-settings">
-                        <Shield /> Group Settings
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              )}
+              {!roomsLoading && !roomsError && (
+                <List>
+                  {rooms.map((room) => {
+                    const peer = displayPeer(room);
+                    const unreadOrCount = messagesByRoom[room.id]?.length || 0;
+                    return (
+                      <ListItem
+                        key={room.id}
+                        button
+                        onClick={() => handleRoomSelect(room)}
+                        selected={activeRoom?.id === room.id}
+                        sx={{
+                          borderRadius: "8px",
+                          "&.Mui-selected": { backgroundColor: "rgba(255,255,255,0.15)" },
+                        }}
+                      >
+                        <Badge badgeContent={unreadOrCount} color="primary">
+                          <Avatar
+                            src={peer.avatar}
+                            alt={peer.username}
+                            sx={{ width: 36, height: 36, marginRight: "10px" }}
+                          />
+                        </Badge>
+                        <ListItemText
+                          primary={peer.username}
+                          primaryTypographyProps={{
+                            sx: { color: "#fff", fontSize: 14, lineHeight: 1.2 },
+                          }}
+                        />
+                      </ListItem>
+                    );
+                  })}
+                  {rooms.length === 0 && (
+                    <ListItem>
+                      <ListItemText
+                        primary="Oda bulunamadı"
+                        primaryTypographyProps={{ sx: { color: "#fff" } }}
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              )}
             </div>
           </div>
-        </SheetHeader>
-        <SheetBody className="scrollable-y-auto grow space-y-3.5">
-          {messages.map((message, index) =>
-            message.out ? (
+
+          {/* Chat Window */}
+          {activeRoom && (
+            <div
+              style={{
+                backgroundColor: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: "10px",
+                width: "370px",
+                marginLeft: "10px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                marginTop: "10px",
+              }}
+            >
+              {/* Header */}
               <div
-                key={index}
-                className="flex items-end justify-end gap-3 px-5"
+                style={{
+                  backgroundColor: "#0073b1",
+                  padding: "10px",
+                  color: "#fff",
+                  borderRadius: "10px 10px 0 0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                <div className="flex flex-col gap-1">
-                  <div
-                    className="bg-primary text-primary-foreground text-sm font-medium p-3 rounded-lg shadow-sm"
-                    dangerouslySetInnerHTML={{ __html: message.text }}
-                  />
-
-                  <div className="flex items-center justify-end gap-1">
-                    <span className="text-xs text-secondary-foreground">
-                      {message.time}
-                    </span>
-                    <CheckCheck
-                      className={cn(
-                        'w-4 h-4',
-                        message.read
-                          ? 'text-green-500'
-                          : 'text-muted-foreground',
-                      )}
-                    />
-                  </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {(() => {
+                    const peer = displayPeer(activeRoom);
+                    return (
+                      <>
+                        <Avatar
+                          src={peer.avatar}
+                          alt={peer.username}
+                          style={{ marginRight: "10px" }}
+                        />
+                        <span>{peer.username}</span>
+                      </>
+                    );
+                  })()}
                 </div>
-                <div className="relative">
-                  <Avatar className="size-9">
-                    <AvatarImage
-                      src={toAbsoluteUrl('/media/avatars//300-2.png')}
-                      alt=""
-                    />
-
-                    <AvatarFallback>CH</AvatarFallback>
-                    <AvatarIndicator className="-end-2 -bottom-2">
-                      <AvatarStatus variant="online" className="size-2.5" />
-                    </AvatarIndicator>
-                  </Avatar>
-                </div>
+                <IconButton style={{ color: "#fff" }} onClick={closeChat}>
+                  <Close />
+                </IconButton>
               </div>
-            ) : message.in ? (
-              <div key={index} className="flex items-end gap-3 px-5">
-                <Avatar className="size-9">
-                  <AvatarImage src={toAbsoluteUrl(message.avatar)} alt="" />
-                  <AvatarFallback>CH</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col gap-1">
-                  <div
-                    className="bg-accent/50 text-secondary-foreground text-sm font-medium p-3 rounded-lg shadow-sm"
-                    dangerouslySetInnerHTML={{ __html: message.text }}
-                  />
 
-                  <span className="text-xs text-muted-foreground">
-                    {message.time}
-                  </span>
-                </div>
+              {/* Messages */}
+              <div style={{ height: "300px", overflowY: "auto", padding: "10px" }}>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {sortedMessages(activeRoom.id).map((msg, index) => {
+                    const mine = msg.sender_name === currentUsername || msg.sender_id === userId;
+                    return (
+                      <li
+                        key={index}
+                        style={{
+                          margin: "10px 0",
+                          display: "flex",
+                          justifyContent: mine ? "flex-end" : "flex-start",
+                        }}
+                      >
+                        <div
+                          style={{
+                            backgroundColor: mine ? "#e1ffc7" : "#f1f1f1",
+                            padding: "10px",
+                            borderRadius: "10px",
+                            maxWidth: "80%",
+                          }}
+                        >
+                          <strong>{msg.sender_username}</strong>: {msg.message}
+                          <div style={{ fontSize: "0.8em", color: "#555" }}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </ul>
               </div>
-            ) : null,
+
+              {/* Input */}
+              <form
+                onSubmit={(e) => sendMessage(e, activeRoom.id)}
+                style={{ display: "flex", padding: "10px", gap: "10px" }}
+              >
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "5px",
+                  }}
+                  placeholder="Mesaj yaz..."
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  endIcon={<Send />}
+                >
+                  Gönder
+                </Button>
+              </form>
+            </div>
           )}
-        </SheetBody>
-        <SheetFooter className="block p-0 sm:space-x-0">
-          <div className="p-4 bg-accent/50 flex gap-2">
-            <Avatar className="size-9">
-              <AvatarImage
-                src={toAbsoluteUrl('/media/avatars//300-14.png')}
-                alt=""
-              />
-
-              <AvatarFallback>CH</AvatarFallback>
-              <AvatarIndicator className="-end-2 -bottom-2">
-                <AvatarStatus variant="online" className="size-2.5" />
-              </AvatarIndicator>
-            </Avatar>
-            <div className="flex-1 flex items-center justify-between gap-0.5">
-              <div className="flex flex-col">
-                <div className="inline-flex gap-0.5 text-sm">
-                  <Link
-                    to="#"
-                    className="font-semibold text-mono hover:text-primary"
-                  >
-                    Jane Perez
-                  </Link>
-                  <span className="text-muted-foreground">
-                    wants to join chat
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  1 day ago • Design Team
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline">
-                  Decline
-                </Button>
-                <Button size="sm" variant="mono">
-                  Accept
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="p-5 flex items-center gap-2 relative">
-            <img
-              src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              className="w-8 h-8 rounded-full absolute left-7 top-1/2 -translate-y-1/2"
-              alt=""
-            />
-
-            <Input
-              type="text"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Write a message..."
-              className="w-full ps-12 pe-24 py-4 h-auto"
-            />
-
-            <div className="absolute end-7 top-1/2 -translate-y-1/2 flex gap-2">
-              <Button size="sm" variant="ghost" mode="icon">
-                <Upload className="size-4!" />
-              </Button>
-              <Button size="sm" variant="mono">
-                Send
-              </Button>
-            </div>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+

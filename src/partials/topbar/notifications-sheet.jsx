@@ -71,6 +71,10 @@ export function NotificationsSheet({ trigger }) {
       }
     };
 
+    if(ws.OPEN){
+      console.log("ws connection successful");
+    }
+
     ws.onerror = (error) => {
       console.error("WebSocket Error:", error);
     };
@@ -86,7 +90,7 @@ export function NotificationsSheet({ trigger }) {
     return () => {
       ws.close();
     };
-  }, [token]);
+  }, []);
 
   // 📌 Davet yanıtla
   /*const handleInvitationResponse = async (notificationId, actionType) => {
@@ -135,9 +139,6 @@ export function NotificationsSheet({ trigger }) {
             <Tabs defaultValue="all" className="w-full relative">
               <TabsList variant="line" className="w-full px-5 mb-5">
                 <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="inbox">Inbox</TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
-                <TabsTrigger value="following">Following</TabsTrigger>
                 <div className="grow flex items-center justify-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -217,7 +218,6 @@ export function NotificationsSheet({ trigger }) {
           </ScrollArea>
         </SheetBody>
         <SheetFooter className="border-t border-border p-5 grid grid-cols-2 gap-2.5">
-          <Button variant="outline">Archive all</Button>
           <Button variant="outline" onClick={markAllAsRead}>
             Mark all as read
           </Button>

@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
+import roomreducer from "./roomreducer"
 
 
 /* RTK-Query apis */
@@ -9,6 +10,7 @@ import { baseApi } from "./baseApi";
 
 export const store = configureStore({
   reducer: {
+    room:roomreducer,
     /* RTK-Query reducers */
     [baseApi.reducerPath]: baseApi.reducer,
     /*[authApi.reducerPath]: authApi.reducer,
