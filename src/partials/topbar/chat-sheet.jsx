@@ -14,7 +14,7 @@ import { Chat, Close, Send } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { setOpen, setRoomId, resetRoom } from "@/redux/roomreducer";
 import { useGetRoomQuery, usePostCreateRoomMutation } from "@/redux/chat/chatApi";
-import cookies from "js-cookie";
+import Cookies from "js-cookie";
 
 export const ChatSheet = () => {
   const dispatch = useDispatch();
